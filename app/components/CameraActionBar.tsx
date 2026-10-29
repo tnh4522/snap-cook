@@ -7,6 +7,8 @@ interface CameraActionBarProps {
   onPickGallery: () => void;
   onToggleFacing: () => void;
   disabled?: boolean;
+  /** When false (no camera permission) only the gallery action is enabled. */
+  cameraAvailable?: boolean;
 }
 
 export function CameraActionBar({
@@ -14,14 +16,19 @@ export function CameraActionBar({
   onPickGallery,
   onToggleFacing,
   disabled = false,
+  cameraAvailable = true,
 }: CameraActionBarProps) {
+  const cameraDisabled = disabled || !cameraAvailable;
+
   return (
-    <View className="w-full px-6 pb-8 pt-4">
-      <View className="flex-row items-center justify-around rounded-3xl border border-slate-800/80 bg-slate-950/85 px-6 py-5">
+    <View className="w-full px-6 pb-4 pt-4">
+      <View className="flex-row items-center justify-around rounded-3xl border border-slate-800/80 bg-slate-950/85 px-6 py-4">
         <Pressable
           onPress={onPickGallery}
           disabled={disabled}
-          className="items-center justify-center active:opacity-75"
+          accessibilityRole="button"
+          accessibilityLabel="Pick a photo from gallery"
+          className={`items-center justify-center active:opacity-75 ${disabled ? 'opacity-40' : ''}`}
         >
           <View className="h-12 w-12 items-center justify-center rounded-2xl bg-slate-800">
             <ImageIcon size={22} color="#e2e8f0" />
@@ -31,8 +38,10 @@ export function CameraActionBar({
 
         <Pressable
           onPress={onTakePhoto}
-          disabled={disabled}
-          className="items-center justify-center active:scale-95"
+          disabled={cameraDisabled}
+          accessibilityRole="button"
+          accessibilityLabel="Take a photo of your ingredients"
+          className={`items-center justify-center active:scale-95 ${cameraDisabled ? 'opacity-40' : ''}`}
         >
           <View className="h-20 w-20 items-center justify-center rounded-full border-4 border-emerald-400 bg-emerald-500/20 p-1.5">
             <View className="h-full w-full items-center justify-center rounded-full bg-emerald-500">
@@ -44,8 +53,10 @@ export function CameraActionBar({
 
         <Pressable
           onPress={onToggleFacing}
-          disabled={disabled}
-          className="items-center justify-center active:opacity-75"
+          disabled={cameraDisabled}
+          accessibilityRole="button"
+          accessibilityLabel="Flip camera"
+          className={`items-center justify-center active:opacity-75 ${cameraDisabled ? 'opacity-40' : ''}`}
         >
           <View className="h-12 w-12 items-center justify-center rounded-2xl bg-slate-800">
             <RefreshCw size={22} color="#e2e8f0" />

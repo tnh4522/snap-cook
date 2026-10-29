@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import json
 import logging
 import os
 from typing import Optional
@@ -8,7 +9,12 @@ from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from models import ApiErrorResponse, GenerateRecipesRequest, GenerateRecipesResponse
+from models import (
+    ApiErrorResponse,
+    GenerateRecipesRequest,
+    GenerateRecipesResponse,
+    RecipePreferences,
+)
 from services.ai_service import (
     AIServiceError,
     MAX_IMAGE_BYTES,
@@ -93,17 +99,30 @@ async def generate_recipes_endpoint(
     image_base64: Optional[str] = Form(default=None),
     user_id: Optional[str] = Form(default=None),
     image_url: Optional[str] = Form(default=None),
+    preferences: Optional[str] = Form(default=None),
 ):
     """
     Generate 3 recipes from a fridge/ingredient photo.
     Supports both:
-    1. application/json body: {"image_base64": "...", "user_id": "...", "image_url": "..."}
-    2. multipart/form-data: `file` (UploadFile) or `image_base64` (Form field)
+    1. application/json body: {"image_base64": "...", "user_id": "...", "image_url": "...", "preferences": {...}}
+    2. multipart/form-data: `file` (UploadFile) or `image_base64` (Form field),
+       plus optional `preferences` as a JSON-encoded string.
     """
     content_type = request.headers.get("content-type", "")
     b64_payload: Optional[str] = None
     resolved_user_id: Optional[str] = user_id
     resolved_image_url: Optional[str] = image_url
+    resolved_preferences: Optional[RecipePreferences] = None
+
+    if preferences:
+        try:
+            resolved_preferences = RecipePreferences(**json.loads(preferences))
+        except Exception as exc:
+            return _error_response(
+                status_code=400,
+                detail=f"Invalid 'preferences' field: {str(exc)}",
+                error_code="INVALID_REQUEST",
+            )
 
     if "application/json" in content_type:
         try:
@@ -112,6 +131,7 @@ async def generate_recipes_endpoint(
             b64_payload = req_model.image_base64
             resolved_user_id = req_model.user_id
             resolved_image_url = req_model.image_url
+            resolved_preferences = req_model.preferences
         except Exception as exc:
             return _error_response(
                 status_code=400,
@@ -143,7 +163,9 @@ async def generate_recipes_endpoint(
         )
 
     logger.info("Processing recipe generation request (payload len=%d)...", len(b64_payload))
-    recipes = await asyncio.to_thread(generate_recipes_from_base64, b64_payload)
+    recipes, detected_ingredients = await asyncio.to_thread(
+        generate_recipes_from_base64, b64_payload, resolved_preferences
+    )
     logger.info("Successfully generated %d recipes from AI.", len(recipes))
 
     recipe_dicts = [r.model_dump() for r in recipes]
@@ -156,7 +178,11 @@ async def generate_recipes_endpoint(
     if record_id:
         logger.info("Recipes persisted to Supabase with ID: %s", record_id)
 
-    return GenerateRecipesResponse(recipes=recipes, record_id=record_id)
+    return GenerateRecipesResponse(
+        recipes=recipes,
+        detected_ingredients=detected_ingredients,
+        record_id=record_id,
+    )
 
 
 if __name__ == "__main__":

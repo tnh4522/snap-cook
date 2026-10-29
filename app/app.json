@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "app",
+    "name": "SnapCook AI",
     "slug": "app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "app",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "ios": {
       "icon": "./assets/expo.icon"
     },
@@ -28,12 +28,28 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#020617",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow SnapCook AI to use your camera to photograph your fridge and ingredients.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow SnapCook AI to access your photos so you can pick a picture of your ingredients.",
+          "cameraPermission": "Allow SnapCook AI to use your camera to photograph your fridge and ingredients.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
@@ -48,6 +64,7 @@
       "eas": {
         "projectId": "3ecb9e97-cf6f-4363-81a9-f6e73bed5aa8"
       }
-    }
+    },
+    "backgroundColor": "#020617"
   }
 }

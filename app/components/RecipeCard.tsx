@@ -1,45 +1,45 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { ChevronRight, Flame, ListChecks, UtensilsCrossed } from 'lucide-react-native';
+import { ChevronRight, ListChecks, UtensilsCrossed } from 'lucide-react-native';
 import { RecipeItem } from '@/types/recipe';
+import { RecipeMetaChips } from '@/components/RecipeMetaChips';
+import { FavoriteButton } from '@/components/FavoriteButton';
 
 interface RecipeCardProps {
   recipe: RecipeItem;
-  index: number;
+  index?: number;
+  imageUri?: string | null;
   onPress: () => void;
 }
 
-export function RecipeCard({ recipe, index, onPress }: RecipeCardProps) {
+export function RecipeCard({ recipe, index, imageUri, onPress }: RecipeCardProps) {
   const previewIngredients = recipe.ingredients.slice(0, 3);
   const extraCount = Math.max(0, recipe.ingredients.length - 3);
 
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Open recipe ${recipe.name}`}
       className="mb-4 rounded-3xl border border-slate-800 bg-slate-900/90 p-5 active:opacity-85"
     >
       <View className="flex-row items-start justify-between">
         <View className="flex-1 pr-3">
-          <View className="mb-2 flex-row items-center space-x-2">
-            <View className="rounded-full bg-emerald-500/20 px-3 py-1">
+          {index !== undefined && (
+            <View className="mb-2 self-start rounded-full bg-emerald-500/20 px-3 py-1">
               <Text className="text-xs font-bold uppercase tracking-wider text-emerald-400">
                 Recipe #{index + 1}
               </Text>
             </View>
-            <View className="ml-2 flex-row items-center rounded-full bg-amber-500/15 px-3 py-1">
-              <Flame size={13} color="#fbbf24" />
-              <Text className="ml-1 text-xs font-semibold text-amber-300">
-                {recipe.calories} kcal
-              </Text>
-            </View>
-          </View>
-
+          )}
           <Text className="text-xl font-bold text-white">{recipe.name}</Text>
         </View>
 
-        <View className="h-10 w-10 items-center justify-center rounded-2xl bg-slate-800">
-          <ChevronRight size={20} color="#34d399" />
-        </View>
+        <FavoriteButton recipe={recipe} imageUri={imageUri} size={18} />
+      </View>
+
+      <View className="mt-3">
+        <RecipeMetaChips recipe={recipe} />
       </View>
 
       <View className="mt-4 flex-row flex-wrap gap-2">
@@ -74,6 +74,10 @@ export function RecipeCard({ recipe, index, onPress }: RecipeCardProps) {
           <Text className="ml-1.5 text-xs text-slate-400">
             {recipe.instructions.length} steps
           </Text>
+        </View>
+        <View className="flex-row items-center">
+          <Text className="mr-1 text-xs font-semibold text-emerald-400">View</Text>
+          <ChevronRight size={16} color="#34d399" />
         </View>
       </View>
     </Pressable>

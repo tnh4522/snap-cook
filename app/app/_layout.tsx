@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { AlertOctagon, RotateCcw } from 'lucide-react-native';
 import { ToastProvider } from '@/context/ToastContext';
 import { RecipeProvider } from '@/context/RecipeContext';
+import { LibraryProvider } from '@/context/LibraryContext';
 import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
@@ -38,20 +39,22 @@ export default function RootLayout() {
   return (
     <GlobalErrorBoundary>
       <ToastProvider>
-        <RecipeProvider>
-          <StatusBar style="light" />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: '#020617' },
-              animation: 'slide_from_right',
-            }}
-          >
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="recipes" options={{ headerShown: false }} />
-            <Stack.Screen name="recipe/[id]" options={{ headerShown: false }} />
-          </Stack>
-        </RecipeProvider>
+        <LibraryProvider>
+          <RecipeProvider>
+            <StatusBar style="light" />
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: '#020617' },
+                animation: 'slide_from_right',
+              }}
+            >
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="recipes" options={{ headerShown: false }} />
+              <Stack.Screen name="recipe/[id]" options={{ headerShown: false }} />
+            </Stack>
+          </RecipeProvider>
+        </LibraryProvider>
       </ToastProvider>
     </GlobalErrorBoundary>
   );

@@ -1,13 +1,14 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Easing, Image, Text, View } from 'react-native';
-import { Sparkles } from 'lucide-react-native';
+import { Animated, Easing, Image, Pressable, Text, View } from 'react-native';
+import { Sparkles, X } from 'lucide-react-native';
 
 interface ScannerOverlayProps {
   visible: boolean;
   previewUri?: string | null;
+  onCancel?: () => void;
 }
 
-export function ScannerOverlay({ visible, previewUri }: ScannerOverlayProps) {
+export function ScannerOverlay({ visible, previewUri, onCancel }: ScannerOverlayProps) {
   const pulseAnim = useRef(new Animated.Value(0.35)).current;
   const scanLineAnim = useRef(new Animated.Value(0)).current;
 
@@ -96,6 +97,17 @@ export function ScannerOverlay({ visible, previewUri }: ScannerOverlayProps) {
       <Text className="mt-2 max-w-xs text-center text-sm text-slate-300">
         SnapCook AI is identifying fresh ingredients and crafting 3 custom recipes for you.
       </Text>
+
+      {onCancel && (
+        <Pressable
+          onPress={onCancel}
+          accessibilityRole="button"
+          className="mt-8 flex-row items-center rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3 active:opacity-75"
+        >
+          <X size={16} color="#e2e8f0" />
+          <Text className="ml-2 text-sm font-semibold text-slate-200">Cancel</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
