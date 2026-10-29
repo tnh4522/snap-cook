@@ -8,13 +8,17 @@ import {
   AlertCircle,
   ChefHat,
   ChevronRight,
+  Flame,
   Image as ImageIcon,
   ShieldAlert,
   SlidersHorizontal,
   Zap,
   ZapOff,
 } from 'lucide-react-native';
+import { SnapCameraMode } from '@/types/health';
 import { useRecipes } from '@/context/RecipeContext';
+import { useHealth } from '@/context/HealthContext';
+import { useAuth } from '@/context/AuthContext';
 import { useLibrary } from '@/context/LibraryContext';
 import { useToast } from '@/context/ToastContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -26,17 +30,53 @@ import { useI18n } from '@/i18n';
 export default function HomeCameraScreen() {
   const router = useRouter();
   const cameraRef = useRef<CameraView | null>(null);
+  const [cameraMode, setCameraMode] = useState<SnapCameraMode>('fridge');
   const [facing, setFacing] = useState<CameraType>('back');
   const [torchOn, setTorchOn] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   const [permission, requestPermission] = useCameraPermissions();
-  const { recipes, isLoading, error, analyzeIngredientPhoto, cancelAnalysis, clearError } =
-    useRecipes();
+
+  const {
+    recipes,
+    isLoading: isRecipeLoading,
+    error: recipeError,
+    analyzeIngredientPhoto,
+    cancelAnalysis,
+    clearError: clearRecipeError,
+  } = useRecipes();
+
+  const {
+    metrics,
+    todayNutrition,
+    lastFoodAnalysis,
+    isAnalyzingFood,
+    foodError,
+    analyzeFoodPhoto,
+    cancelFoodAnalysis,
+    clearFoodError,
+  } = useHealth();
+
+  const { isAuthenticated } = useAuth();
   const { preferences } = useLibrary();
   const { showToast } = useToast();
-  const { isDark, colors } = useTheme();
+  const { isDark } = useTheme();
   const { t, language } = useI18n();
+
+  const isLoading = isRecipeLoading || isAnalyzingFood;
+  const activeError = cameraMode === 'food_lens' ? foodError : recipeError;
+  const [lastFailedUri, setLastFailedUri] = useState<string | null>(null);
+
+  const handleClearError = () => {
+    clearRecipeError();
+    clearFoodError();
+    setLastFailedUri(null);
+  };
+
+  const handleCancelScan = () => {
+    if (cameraMode === 'food_lens') cancelFoodAnalysis();
+    else cancelAnalysis();
+  };
 
   const prefSummary = [
     ...preferences.diet.map(
@@ -52,9 +92,21 @@ export default function HomeCameraScreen() {
 
   const handleProcessUri = async (uri: string) => {
     setPreviewUri(uri);
-    const ok = await analyzeIngredientPhoto(uri);
-    if (ok) {
-      router.navigate('/recipes');
+    setLastFailedUri(null);
+    if (cameraMode === 'food_lens') {
+      const ok = await analyzeFoodPhoto(uri);
+      if (ok) {
+        router.navigate('/food-analysis');
+      } else {
+        setLastFailedUri(uri);
+      }
+    } else {
+      const ok = await analyzeIngredientPhoto(uri);
+      if (ok) {
+        router.navigate('/recipes');
+      } else {
+        setLastFailedUri(uri);
+      }
     }
   };
 
@@ -64,7 +116,7 @@ export default function HomeCameraScreen() {
       showToast(t('home.cameraStartingTitle'), t('home.cameraStartingDesc'), 'info');
       return;
     }
-    clearError();
+    handleClearError();
     try {
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.85 });
       if (photo?.uri) {
@@ -78,7 +130,7 @@ export default function HomeCameraScreen() {
 
   const handlePickGallery = async () => {
     if (isLoading) return;
-    clearError();
+    handleClearError();
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
@@ -146,10 +198,18 @@ export default function HomeCameraScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#f8f9fa] dark:bg-[#121415]" edges={['top', 'left', 'right']}>
-      <ScannerOverlay visible={isLoading} previewUri={previewUri} onCancel={cancelAnalysis} />
+      <ScannerOverlay
+        visible={isLoading}
+        previewUri={previewUri}
+        onCancel={handleCancelScan}
+        title={cameraMode === 'food_lens' ? t('foodLens.scanningFoodTitle') : t('home.scanningTitle')}
+        description={
+          cameraMode === 'food_lens' ? t('foodLens.scanningFoodDesc') : t('home.scanningDesc')
+        }
+      />
 
       {/* Header */}
-      <View className="flex-row items-center justify-between px-6 py-4">
+      <View className="flex-row items-center justify-between px-6 py-3">
         <View className="flex-row items-center">
           <View className="mr-3 h-10 w-10 items-center justify-center rounded-2xl border border-emerald-600/15 bg-emerald-50 shadow-sm dark:border-emerald-500/20 dark:bg-emerald-950/40">
             <ChefHat size={20} color={isDark ? '#52b788' : '#2d6a4f'} />
@@ -163,6 +223,8 @@ export default function HomeCameraScreen() {
         </View>
         <Pressable
           onPress={() => router.navigate('/settings')}
+          hitSlop={8}
+          accessibilityRole="button"
           accessibilityLabel={t('settings.title')}
           className="h-10 w-10 items-center justify-center rounded-2xl border border-stone-200/90 bg-white shadow-sm active:opacity-75 dark:border-stone-800 dark:bg-[#1a1d1f]"
         >
@@ -170,28 +232,159 @@ export default function HomeCameraScreen() {
         </Pressable>
       </View>
 
-      {/* Preferences summary pill */}
-      <Pressable
-        onPress={() => router.navigate('/settings')}
-        className="mx-6 mb-3 flex-row items-center rounded-2xl border border-stone-200/90 bg-white px-3.5 py-2.5 shadow-sm active:opacity-80 dark:border-stone-800/80 dark:bg-[#1a1d1f]"
-      >
-        <Text className="text-xs font-medium text-stone-400 dark:text-stone-500">
-          {t('home.preferencesPrefix')}
-        </Text>
-        <Text className="flex-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300" numberOfLines={1}>
-          {prefSummary}
-        </Text>
-        <ChevronRight size={14} color={isDark ? '#64748b' : '#94a3b8'} />
-      </Pressable>
+      {/* Camera Mode Switcher: Fridge -> Recipes vs Food Lens -> Calo */}
+      <View className="mx-6 mb-2.5 flex-row rounded-2xl border border-stone-200/90 bg-stone-200/70 p-1 dark:border-stone-800 dark:bg-[#1a1d1f]">
+        <Pressable
+          onPress={() => setCameraMode('fridge')}
+          className="flex-1 flex-row items-center justify-center rounded-xl py-2"
+          style={{
+            backgroundColor:
+              cameraMode === 'fridge'
+                ? isDark
+                  ? '#272b2e'
+                  : '#ffffff'
+                : 'transparent',
+          }}
+        >
+          <ChefHat
+            size={14}
+            color={
+              cameraMode === 'fridge'
+                ? isDark
+                  ? '#52b788'
+                  : '#2d6a4f'
+                : isDark
+                ? '#84948a'
+                : '#64748b'
+            }
+          />
+          <Text
+            className="ml-1.5 text-xs font-bold"
+            style={{
+              color:
+                cameraMode === 'fridge'
+                  ? isDark
+                    ? '#edf2ee'
+                    : '#1c2420'
+                  : isDark
+                  ? '#84948a'
+                  : '#64748b',
+            }}
+          >
+            {t('foodLens.modeFridge')}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => setCameraMode('food_lens')}
+          className="flex-1 flex-row items-center justify-center rounded-xl py-2"
+          style={{
+            backgroundColor:
+              cameraMode === 'food_lens'
+                ? isDark
+                  ? '#272b2e'
+                  : '#ffffff'
+                : 'transparent',
+          }}
+        >
+          <Flame
+            size={14}
+            color={
+              cameraMode === 'food_lens'
+                ? '#f97316'
+                : isDark
+                ? '#84948a'
+                : '#64748b'
+            }
+          />
+          <Text
+            className="ml-1.5 text-xs font-bold"
+            style={{
+              color:
+                cameraMode === 'food_lens'
+                  ? isDark
+                    ? '#edf2ee'
+                    : '#1c2420'
+                  : isDark
+                  ? '#84948a'
+                  : '#64748b',
+            }}
+          >
+            {t('foodLens.modeFood')}
+          </Text>
+        </Pressable>
+      </View>
+
+      {/* Contextual Summary Pill (Preferences for Fridge, Calorie Budget for Food Lens) */}
+      {cameraMode === 'fridge' ? (
+        <Pressable
+          onPress={() => router.navigate('/settings')}
+          className="mx-6 mb-3 flex-row items-center rounded-2xl border border-stone-200/90 bg-white px-3.5 py-2.5 shadow-sm active:opacity-80 dark:border-stone-800/80 dark:bg-[#1a1d1f]"
+        >
+          <Text className="text-xs font-medium text-stone-400 dark:text-stone-500">
+            {t('home.preferencesPrefix')}
+          </Text>
+          <Text
+            className="flex-1 text-xs font-semibold text-emerald-800 dark:text-emerald-300"
+            numberOfLines={1}
+          >
+            {prefSummary}
+          </Text>
+          <ChevronRight size={14} color={isDark ? '#64748b' : '#94a3b8'} />
+        </Pressable>
+      ) : (
+        <Pressable
+          onPress={() => router.navigate('/(tabs)/health')}
+          className="mx-6 mb-3 flex-row items-center rounded-2xl border border-emerald-600/20 bg-emerald-50/70 px-3.5 py-2.5 shadow-sm active:opacity-80 dark:border-emerald-500/20 dark:bg-emerald-950/30"
+        >
+          <Flame size={14} color={isDark ? '#86efac' : '#2d6a4f'} />
+          <Text
+            className="ml-2 flex-1 text-xs font-semibold text-emerald-900 dark:text-emerald-200"
+            numberOfLines={1}
+          >
+            {isAuthenticated
+              ? `${t('health.eaten')}: ${todayNutrition.calories} / ${metrics.daily_calorie_target} kcal · BMI ${metrics.bmi}`
+              : t('auth.loginRequiredTitle')}
+          </Text>
+          <ChevronRight size={14} color={isDark ? '#86efac' : '#2d6a4f'} />
+        </Pressable>
+      )}
 
       {/* Error notification */}
-      {error && (
-        <View className="mx-6 mb-3 flex-row items-center rounded-2xl border border-rose-200 bg-rose-50 p-3.5 dark:border-rose-900/40 dark:bg-rose-950/40">
-          <AlertCircle size={17} color={isDark ? '#f43f5e' : '#be123c'} />
-          <Text className="ml-2.5 flex-1 text-xs font-medium text-rose-800 dark:text-rose-200">{error}</Text>
-          <Pressable onPress={clearError} className="ml-2 rounded-lg bg-rose-100 px-2.5 py-1 dark:bg-rose-900/50">
-            <Text className="text-xs font-bold text-rose-700 dark:text-rose-200">{t('common.dismiss')}</Text>
-          </Pressable>
+      {activeError && (
+        <View className="mx-6 mb-3 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 dark:border-rose-900/40 dark:bg-rose-950/40">
+          <View className="flex-row items-center">
+            <AlertCircle size={17} color={isDark ? '#f43f5e' : '#be123c'} />
+            <Text className="ml-2.5 flex-1 text-xs font-medium text-rose-800 dark:text-rose-200">
+              {activeError}
+            </Text>
+          </View>
+          <View className="mt-2.5 flex-row justify-end gap-2">
+            {lastFailedUri && (
+              <Pressable
+                onPress={() => handleProcessUri(lastFailedUri)}
+                hitSlop={6}
+                accessibilityRole="button"
+                accessibilityLabel={t('home.retryScan')}
+                className="rounded-xl bg-rose-600 px-3 py-1.5 active:opacity-85 dark:bg-rose-700"
+              >
+                <Text className="text-xs font-bold text-white">
+                  {t('home.retryScan')}
+                </Text>
+              </Pressable>
+            )}
+            <Pressable
+              onPress={handleClearError}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.dismiss')}
+              className="rounded-xl bg-rose-100 px-3 py-1.5 active:opacity-85 dark:bg-rose-900/50"
+            >
+              <Text className="text-xs font-bold text-rose-700 dark:text-rose-200">
+                {t('common.dismiss')}
+              </Text>
+            </Pressable>
+          </View>
         </View>
       )}
 
@@ -209,37 +402,64 @@ export default function HomeCameraScreen() {
               <View className="flex-row items-center justify-between">
                 <View className="rounded-full bg-black/60 px-3.5 py-1.5 backdrop-blur-md">
                   <Text className="text-[11px] font-medium text-stone-200">
-                    {t('home.centerIngredients')}
+                    {cameraMode === 'food_lens'
+                      ? t('foodLens.centerFood')
+                      : t('home.centerIngredients')}
                   </Text>
                 </View>
                 {facing === 'back' && (
                   <Pressable
                     onPress={() => setTorchOn((v) => !v)}
+                    hitSlop={8}
+                    accessibilityRole="button"
                     accessibilityLabel={
                       torchOn ? t('home.turnFlashlightOff') : t('home.turnFlashlightOn')
                     }
-                    className={`h-9 w-9 items-center justify-center rounded-full ${
+                    className={`h-10 w-10 items-center justify-center rounded-full ${
                       torchOn ? 'bg-amber-400' : 'bg-black/60'
                     }`}
                   >
                     {torchOn ? (
-                      <Zap size={16} color="#1c1917" />
+                      <Zap size={17} color="#1c1917" />
                     ) : (
-                      <ZapOff size={16} color="#ffffff" />
+                      <ZapOff size={17} color="#ffffff" />
                     )}
                   </Pressable>
                 )}
               </View>
 
-              {/* Guide border */}
-              <View className="h-44 w-full self-center rounded-3xl border-2 border-dashed border-white/40" />
+              {/* Viewfinder reticle with precision corner brackets */}
+              <View className="relative h-48 w-full max-w-[270px] self-center">
+                {/* Top-left corner */}
+                <View className="absolute left-0 top-0 h-7 w-7 rounded-tl-xl border-l-2 border-t-2 border-white/80" />
+                {/* Top-right corner */}
+                <View className="absolute right-0 top-0 h-7 w-7 rounded-tr-xl border-r-2 border-t-2 border-white/80" />
+                {/* Bottom-left corner */}
+                <View className="absolute bottom-0 left-0 h-7 w-7 rounded-bl-xl border-b-2 border-l-2 border-white/80" />
+                {/* Bottom-right corner */}
+                <View className="absolute bottom-0 right-0 h-7 w-7 rounded-br-xl border-b-2 border-r-2 border-white/80" />
+                {/* Center focus indicator */}
+                <View className="absolute inset-0 items-center justify-center">
+                  <View className="h-1.5 w-1.5 rounded-full bg-white/50" />
+                </View>
+              </View>
 
-              {recipes.length > 0 ? (
+              {cameraMode === 'fridge' && recipes.length > 0 ? (
                 <Pressable
                   onPress={() => router.navigate('/recipes')}
                   className="flex-row items-center self-center rounded-full bg-emerald-700/90 px-4 py-2 shadow-sm active:opacity-80 dark:bg-emerald-600/90"
                 >
                   <Text className="text-xs font-bold text-white">{t('home.viewLastResults')}</Text>
+                  <ChevronRight size={14} color="#ffffff" />
+                </Pressable>
+              ) : cameraMode === 'food_lens' && lastFoodAnalysis ? (
+                <Pressable
+                  onPress={() => router.navigate('/food-analysis')}
+                  className="flex-row items-center self-center rounded-full bg-orange-600/90 px-4 py-2 shadow-sm active:opacity-80 dark:bg-orange-500/90"
+                >
+                  <Text className="text-xs font-bold text-white">
+                    {lastFoodAnalysis.food_name} ({lastFoodAnalysis.calories} kcal)
+                  </Text>
                   <ChevronRight size={14} color="#ffffff" />
                 </Pressable>
               ) : (
@@ -258,6 +478,8 @@ export default function HomeCameraScreen() {
         onToggleFacing={toggleFacing}
         disabled={isLoading}
         cameraAvailable={Boolean(permission?.granted)}
+        accentColor={cameraMode === 'food_lens' ? 'orange' : 'emerald'}
+        snapLabel={cameraMode === 'food_lens' ? t('foodLens.snapFood') : t('home.snapFridge')}
       />
     </SafeAreaView>
   );

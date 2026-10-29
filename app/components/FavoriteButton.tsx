@@ -11,9 +11,10 @@ interface FavoriteButtonProps {
   recipe: RecipeItem;
   imageUri?: string | null;
   size?: number;
+  className?: string;
 }
 
-export function FavoriteButton({ recipe, imageUri, size = 18 }: FavoriteButtonProps) {
+export function FavoriteButton({ recipe, imageUri, size = 18, className }: FavoriteButtonProps) {
   const { isFavorite, toggleFavorite } = useLibrary();
   const { showToast } = useToast();
   const { isDark } = useTheme();
@@ -35,6 +36,10 @@ export function FavoriteButton({ recipe, imageUri, size = 18 }: FavoriteButtonPr
       ? '#68746d'
       : '#94a3b8';
 
+  const defaultContainer = active
+    ? 'border-rose-200 bg-rose-50 dark:border-rose-900/40 dark:bg-rose-950/40'
+    : 'border-stone-200/90 bg-white shadow-sm dark:border-stone-800 dark:bg-[#1a1d1f]';
+
   return (
     <Pressable
       onPress={handlePress}
@@ -50,11 +55,7 @@ export function FavoriteButton({ recipe, imageUri, size = 18 }: FavoriteButtonPr
             : 'Save to favorites'
       }
       accessibilityState={{ selected: active }}
-      className={`h-9 w-9 items-center justify-center rounded-2xl border active:opacity-75 ${
-        active
-          ? 'border-rose-200 bg-rose-50 dark:border-rose-900/40 dark:bg-rose-950/40'
-          : 'border-stone-200/90 bg-stone-50 shadow-sm dark:border-stone-800/80 dark:bg-stone-800/80'
-      }`}
+      className={className ?? `h-10 w-10 items-center justify-center rounded-2xl border active:opacity-75 ${defaultContainer}`}
     >
       <Heart size={size} color={heartColor} fill={active ? heartColor : 'transparent'} strokeWidth={2} />
     </Pressable>

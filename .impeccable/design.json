@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-29T15:45:00Z",
+  "title": "Design System: SnapCook AI",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Culinary Emerald",
+        "canonical": "#2d6a4f",
+        "tonalRamp": ["#081d13", "#123323", "#1b4a34", "#2d6a4f", "#408a68", "#61ab89", "#92caa \&", "#eaf4ee"]
+      },
+      "primary-dark": {
+        "role": "primary",
+        "displayName": "Mint Emerald",
+        "canonical": "#52b788",
+        "tonalRamp": ["#0b261a", "#15422e", "#206144", "#30855f", "#52b788", "#77caa2", "#a8dfc4", "#e8f7f0"]
+      },
+      "bg-dark": {
+        "role": "neutral",
+        "displayName": "Mineral Slate",
+        "canonical": "#121415",
+        "tonalRamp": ["#08090a", "#121415", "#1c2022", "#282d30", "#3a4145", "#5c656b", "#8e99a1", "#edf2ee"]
+      },
+      "surface-dark": {
+        "role": "neutral",
+        "displayName": "Slate Surface",
+        "canonical": "#1a1d1f",
+        "tonalRamp": ["#0d0e0f", "#141617", "#1a1d1f", "#262a2d", "#383e42", "#5e666c", "#919ca4", "#f4f7f8"]
+      },
+      "accent-amber": {
+        "role": "secondary",
+        "displayName": "Pantry Amber",
+        "canonical": "#b45309",
+        "tonalRamp": ["#2e1302", "#522204", "#823706", "#b45309", "#d97706", "#f59e0b", "#fbbf24", "#fdf3e7"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Screen branding and hero announcements (24–28px, Bold 800)"
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Recipe names and primary card headers (18–20px, Bold 700)"
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section headings, modal headers, and component titles (15–16px, Bold 700)"
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Cooking instructions and conversational AI coach responses (13–14px, Medium 500)"
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Step numbers, dietary tags, and difficulty badges (11–12px, SemiBold 600)"
+      }
+    },
+    "shadows": [
+      {
+        "name": "resting-card",
+        "value": "0 2px 8px rgba(0, 0, 0, 0.04)",
+        "purpose": "Resting card ambient depth on light/dark canvas"
+      },
+      {
+        "name": "elevated-active",
+        "value": "0 4px 16px rgba(0, 0, 0, 0.12)",
+        "purpose": "Active step card, floating action bars, and modal surfaces"
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default easing curve for modal reveals and button interactions"
+      }
+    ],
+    "breakpoints": [
+      { "name": "compact", "value": "0px" },
+      { "name": "medium", "value": "600px" },
+      { "name": "expanded", "value": "840px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Hero action button for camera snap, save, and cooking triggers.",
+      "html": "<button class=\"ds-btn-primary\"><span>Start Cooking</span></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; background-color: #2d6a4f; color: #ffffff; font-family: 'Spline Sans', -apple-system, sans-serif; font-size: 14px; font-weight: 700; padding: 12px 24px; border-radius: 16px; border: none; cursor: pointer; transition: transform 0.15s ease, opacity 0.15s ease; box-shadow: 0 2px 8px rgba(45, 106, 79, 0.25); } .ds-btn-primary:active { transform: scale(0.97); opacity: 0.9; }"
+    },
+    {
+      "name": "Action Icon Button",
+      "kind": "button",
+      "refersTo": "button-icon",
+      "description": "Standardized 40x40 rounded-2xl action button for Back, Share, and Favorites.",
+      "html": "<button class=\"ds-btn-icon\" aria-label=\"Share recipe\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#2d6a4f\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"18\" cy=\"5\" r=\"3\"/><circle cx=\"6\" cy=\"12\" r=\"3\"/><circle cx=\"18\" cy=\"19\" r=\"3\"/><line x1=\"8.59\" y1=\"13.51\" x2=\"15.42\" y2=\"17.49\"/><line x1=\"15.41\" y1=\"6.51\" x2=\"8.59\" y2=\"10.49\"/></svg></button>",
+      "css": ".ds-btn-icon { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; background-color: #ffffff; border: 1px solid #e2e6e3; border-radius: 16px; cursor: pointer; transition: background-color 0.15s ease, transform 0.15s ease; } .ds-btn-icon:active { background-color: #f1f3f2; transform: scale(0.95); }"
+    },
+    {
+      "name": "Cooking Step Card (Active)",
+      "kind": "card",
+      "refersTo": "card-step-active",
+      "description": "Elevated active instruction step with highlighted badge and ring indicator.",
+      "html": "<div class=\"ds-step-active\"><div class=\"ds-step-num\">2</div><div class=\"ds-step-content\"><div class=\"ds-step-header\"><span class=\"ds-step-label\">STEP 2</span><span class=\"ds-step-badge\">Cooking</span></div><p class=\"ds-step-text\">Heat 2 tbsp olive oil in a non-stick pan over medium heat. Sauté minced garlic until fragrant.</p></div></div>",
+      "css": ".ds-step-active { display: flex; align-items: flex-start; padding: 16px; background: #ffffff; border: 1px solid #2d6a4f; border-radius: 16px; box-shadow: 0 0 0 2px rgba(45, 106, 79, 0.15); font-family: 'Spline Sans', -apple-system, sans-serif; margin-bottom: 12px; } .ds-step-num { width: 24px; height: 24px; border-radius: 9999px; background: #2d6a4f; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; margin-right: 14px; flex-shrink: 0; } .ds-step-content { flex: 1; } .ds-step-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; } .ds-step-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #2d6a4f; } .ds-step-badge { font-size: 10px; font-weight: 700; background: #eaf4ee; color: #2d6a4f; padding: 2px 8px; border-radius: 9999px; } .ds-step-text { font-size: 13px; line-height: 1.5; color: #1c2420; margin: 0; font-weight: 500; }"
+    },
+    {
+      "name": "Recipe Meta Chip",
+      "kind": "chip",
+      "refersTo": "chip-meta",
+      "description": "Culinary metadata pill for calories, cook time, and servings.",
+      "html": "<div class=\"ds-chip-meta\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#b45309\" stroke-width=\"2.2\"><path d=\"M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z\"/></svg><span>420 kcal</span></div>",
+      "css": ".ds-chip-meta { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 9999px; background: #fdf3e7; border: 1px solid rgba(180, 83, 9, 0.2); font-family: 'Spline Sans', -apple-system, sans-serif; font-size: 11px; font-weight: 600; color: #9a4704; }"
+    },
+    {
+      "name": "Ingredient Checkbox Row",
+      "kind": "custom",
+      "refersTo": "ingredient-row",
+      "description": "Touchable ingredient checklist item with checkmark feedback.",
+      "html": "<div class=\"ds-ing-row\"><div class=\"ds-ing-box\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#ffffff\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"20 6 9 17 4 12\"/></svg></div><span class=\"ds-ing-text\">300g Fresh Chicken Breast</span></div>",
+      "css": ".ds-ing-row { display: flex; align-items: center; padding: 10px 4px; min-height: 46px; border-bottom: 1px solid #edf1ee; font-family: 'Spline Sans', -apple-system, sans-serif; } .ds-ing-box { width: 22px; height: 22px; border-radius: 8px; background: #2d6a4f; border: 2px solid #2d6a4f; display: flex; align-items: center; justify-content: center; margin-right: 12px; } .ds-ing-text { font-size: 13px; font-weight: 500; color: #1c2420; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Kitchen Atelier",
+    "overview": "SnapCook AI is designed for real kitchen counters, cutting boards, and refrigerators. The atmosphere bridges professional culinary precision with organic warmth: deep mineral slate (#121415) and crisp porcelain light (#f8f9fa) canvases, grounded by fresh herb emerald accents (#2d6a4f / #52b788) and warm pantry amber highlights. It rejects both clinical medical sterile aesthetics and toy-like cartoon gamification.\n\nThe interface prioritizes glanceability, high contrast, and tactile ease. Cooking is a hands-busy activity: screens are structured with generous touch targets (≥44pt/48dp), high contrast typography readable from arm's length, clear progress indicators, and bottom thumb-zone controls.",
+    "keyCharacteristics": [
+      "Culinary Grounding: Colors, icons, and metaphors reflect fresh produce, natural fire, and pantry staples.",
+      "Countertop Ergonomics: High-contrast, large touch targets, glanceable hierarchy designed for one-handed operation.",
+      "Tonal Layering & Restraint: Flush 24px cards bounded by crisp 1px borders rather than noisy floating drop shadows.",
+      "Local-First Fluidity: Instant feedback states, subtle transitions, and persistent cooking memory."
+    ],
+    "rules": [
+      {
+        "name": "The Natural Produce Rule",
+        "body": "Accent colors must map to real culinary states (herb green, baked amber, water blue, berry purple). Never introduce arbitrary neon or synthetic hues outside this botanical spectrum.",
+        "section": "colors"
+      },
+      {
+        "name": "The 10% Herb Rule",
+        "body": "High-saturation emerald is used on ≤10% of any screen viewport. Its rarity gives hero buttons and active steps immediate visual authority.",
+        "section": "colors"
+      },
+      {
+        "name": "The Arm's Length Rule",
+        "body": "Active instruction steps and ingredient quantities must never fall below 13px (font size) and 500 (font weight). If a cook cannot read it from 60cm away while holding a spoon, the typography has failed.",
+        "section": "typography"
+      },
+      {
+        "name": "The Countertop Rule",
+        "body": "Components sit flush like kitchen tools on a prep table. Cards do not float detached in deep space; depth is communicated through tonal surface layers and crisp 1px borders.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Organic Rim Rule",
+        "body": "Never use sharp 90-degree corners on interactive touch surfaces. Every button, card, and chip carries rounded radii reflecting smooth ceramic dishware and culinary implements.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do maintain a minimum of 44×44pt (iOS) / 48×48dp (Android) touch targets with hitSlop on all interactive buttons.",
+      "Do ensure all text achieves ≥4.5:1 contrast against its background in both light (#f8f9fa) and dark (#121415) modes.",
+      "Do highlight the current active step in cooking workflows so users glance and immediately know what to do next.",
+      "Do virtualize list feeds (FlatList) with key extractors for history and bookmarks to maintain 60fps scrolling.",
+      "Do provide instant cancellation and dismiss feedback on all camera scans and dialogs."
+    ],
+    "donts": [
+      "Don't use pure black (#000000) for surfaces; use mineral slate (#121415 / #1a1d1f) to preserve color depth and contrast.",
+      "Don't render unstyled or hardcoded English/Vietnamese strings; all user-facing labels must pass through useI18n().",
+      "Don't use floating zero-blur block drop shadows; depth is conveyed through tonal layering and 1px borders.",
+      "Don't lock primary camera or cooking controls to the top of tall phone screens; keep controls within thumb reach.",
+      "Don't wash out completed step text to unreadable gray; users must still be able to reference previous temperatures or times."
+    ]
+  }
+}

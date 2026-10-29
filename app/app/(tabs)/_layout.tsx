@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Camera, Heart, History, Settings } from 'lucide-react-native';
+import { Camera, Heart, HeartPulse, History, Settings } from 'lucide-react-native';
 import { useLibrary } from '@/context/LibraryContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useI18n } from '@/i18n';
@@ -33,6 +33,15 @@ export default function TabsLayout() {
         options={{
           title: t('tabs.snapAndCook'),
           tabBarIcon: ({ color, size }) => <Camera size={size} color={color} strokeWidth={2.1} />,
+        }}
+      />
+      <Tabs.Screen
+        name="health"
+        options={{
+          title: t('tabs.health'),
+          tabBarIcon: ({ color, size }) => (
+            <HeartPulse size={size} color={color} strokeWidth={2.1} />
+          ),
         }}
       />
       <Tabs.Screen

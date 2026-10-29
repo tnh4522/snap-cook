@@ -19,6 +19,7 @@ interface RecipeContextValue {
   openSession: (session: ScanSession) => void;
   clearError: () => void;
   resetSession: () => void;
+  addDetectedIngredient: (ingredient: string) => void;
 }
 
 const RecipeContext = createContext<RecipeContextValue | undefined>(undefined);
@@ -36,6 +37,16 @@ export function RecipeProvider({ children }: { children: React.ReactNode }) {
   const { t } = useI18n();
 
   const clearError = useCallback(() => setError(null), []);
+
+  const addDetectedIngredient = useCallback((ingredient: string) => {
+    const trimmed = ingredient.trim();
+    if (!trimmed) return;
+    setDetectedIngredients((prev) =>
+      prev.some((item) => item.toLowerCase() === trimmed.toLowerCase())
+        ? prev
+        : [...prev, trimmed]
+    );
+  }, []);
 
   const resetSession = useCallback(() => {
     abortRef.current?.abort();
@@ -146,6 +157,7 @@ export function RecipeProvider({ children }: { children: React.ReactNode }) {
         openSession,
         clearError,
         resetSession,
+        addDetectedIngredient,
       }}
     >
       {children}

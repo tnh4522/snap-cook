@@ -153,4 +153,64 @@ assert.strictEqual(translate('vi', 'settings.themeTitle'), 'Giao diện');
 assert.strictEqual(translate('en', 'settings.themeLight'), 'Light');
 assert.strictEqual(translate('vi', 'settings.themeLight'), 'Sáng');
 
-console.log('✓ All frontend utility and localization unit tests passed!');
+// 6. Phase 1: Health Metrics (BMI, BMR, TDEE, Calorie Budget) & Food Lens Portion Scaling
+function calculateBmi(weightKg, heightCm) {
+  const heightM = heightCm / 100;
+  const bmi = Math.round((weightKg / (heightM * heightM)) * 10) / 10;
+  let category = 'normal';
+  if (bmi < 18.5) category = 'underweight';
+  else if (bmi < 23.0) category = 'normal';
+  else if (bmi < 25.0) category = 'overweight';
+  else category = 'obese';
+  return { bmi, category };
+}
+
+function scaleFoodAnalysis(analysis, multiplier) {
+  const m = Math.max(0.25, Math.min(3, multiplier));
+  const round1 = (n) => Math.round(n * m * 10) / 10;
+  return {
+    ...analysis,
+    estimated_grams: Math.round(analysis.estimated_grams * m),
+    calories: Math.round(analysis.calories * m),
+    protein_g: round1(analysis.protein_g),
+    carbs_g: round1(analysis.carbs_g),
+    fat_g: round1(analysis.fat_g),
+  };
+}
+
+const bmiRes = calculateBmi(60, 165);
+assert.strictEqual(bmiRes.bmi, 22.0);
+assert.strictEqual(bmiRes.category, 'normal');
+
+const samplePho = {
+  food_name: 'Phở bò tái',
+  estimated_grams: 500,
+  calories: 480,
+  protein_g: 28,
+  carbs_g: 60,
+  fat_g: 12,
+};
+const scaledHalf = scaleFoodAnalysis(samplePho, 0.5);
+assert.strictEqual(scaledHalf.calories, 240);
+assert.strictEqual(scaledHalf.estimated_grams, 250);
+assert.strictEqual(scaledHalf.protein_g, 14);
+
+const scaledLarge = scaleFoodAnalysis(samplePho, 1.5);
+assert.strictEqual(scaledLarge.calories, 720);
+assert.strictEqual(scaledLarge.estimated_grams, 750);
+
+// 7. Phase 3: Workout MET Calorie Calculations
+function calculateWorkoutCalories(baseMet, durationMin, weightKg, modifier = 1.0) {
+  const effectiveMet = baseMet * modifier;
+  const hours = durationMin / 60;
+  return Math.round(effectiveMet * weightKg * hours);
+}
+// Running (MET 9.5), 30 min, 60kg, moderate = 9.5 * 60 * 0.5 = 285 kcal
+const runBurn = calculateWorkoutCalories(9.5, 30, 60.0);
+assert.strictEqual(runBurn, 285);
+
+// Walking (MET 3.8), 60 min, 70kg, moderate = 3.8 * 70 * 1 = 266 kcal
+const walkBurn = calculateWorkoutCalories(3.8, 60, 70.0);
+assert.strictEqual(walkBurn, 266);
+
+console.log('✓ All frontend utility, health metrics, and localization unit tests passed!');

@@ -8,6 +8,8 @@ import { AlertOctagon, RotateCcw } from 'lucide-react-native';
 import { ToastProvider } from '@/context/ToastContext';
 import { RecipeProvider } from '@/context/RecipeContext';
 import { LibraryProvider } from '@/context/LibraryContext';
+import { AuthProvider } from '@/context/AuthContext';
+import { HealthProvider } from '@/context/HealthContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
 
@@ -52,6 +54,12 @@ function NavigationRoot() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="recipes" options={{ headerShown: false }} />
         <Stack.Screen name="recipe/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="auth" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+        <Stack.Screen name="food-analysis" options={{ headerShown: false }} />
+        <Stack.Screen name="meal-planner" options={{ headerShown: false }} />
+        <Stack.Screen name="coach" options={{ headerShown: false }} />
+        <Stack.Screen name="weekly-report" options={{ headerShown: false }} />
       </Stack>
     </>
   );
@@ -63,9 +71,13 @@ export default function RootLayout() {
       <ThemeProvider>
         <ToastProvider>
           <LibraryProvider>
-            <RecipeProvider>
-              <NavigationRoot />
-            </RecipeProvider>
+            <AuthProvider>
+              <HealthProvider>
+                <RecipeProvider>
+                  <NavigationRoot />
+                </RecipeProvider>
+              </HealthProvider>
+            </AuthProvider>
           </LibraryProvider>
         </ToastProvider>
       </ThemeProvider>
