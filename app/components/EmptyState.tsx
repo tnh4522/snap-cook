@@ -11,16 +11,18 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, message, actionLabel, onAction }: EmptyStateProps) {
   return (
-    <View className="mt-16 items-center justify-center rounded-3xl border border-slate-800 bg-slate-900 p-8">
-      {icon}
-      <Text className="mt-4 text-center text-lg font-bold text-white">{title}</Text>
-      <Text className="mt-2 text-center text-sm text-slate-400">{message}</Text>
+    <View className="mt-12 items-center justify-center rounded-3xl border border-stone-200/90 bg-white p-7 shadow-sm dark:border-stone-800/80 dark:bg-[#1a1d1f]">
+      <View className="mb-3.5 h-14 w-14 items-center justify-center rounded-2xl bg-stone-100 dark:bg-stone-800/70">
+        {icon}
+      </View>
+      <Text className="text-center text-base font-bold text-stone-800 dark:text-stone-100">{title}</Text>
+      <Text className="mt-1.5 text-center text-xs leading-5 text-stone-500 dark:text-stone-400">{message}</Text>
       {actionLabel && onAction && (
         <Pressable
           onPress={onAction}
-          className="mt-6 rounded-2xl bg-emerald-500 px-6 py-3 active:opacity-85"
+          className="mt-5 rounded-2xl bg-emerald-700 px-5 py-2.5 shadow-sm active:opacity-85 dark:bg-emerald-600"
         >
-          <Text className="text-sm font-bold text-slate-950">{actionLabel}</Text>
+          <Text className="text-xs font-bold text-white">{actionLabel}</Text>
         </Pressable>
       )}
     </View>

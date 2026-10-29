@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
 import { AlertTriangle, CheckCircle2, Info, WifiOff, X } from 'lucide-react-native';
+import { useTheme } from '@/context/ThemeContext';
 
 export type ToastType = 'error' | 'warning' | 'success' | 'info';
 
@@ -17,6 +18,7 @@ interface ToastBannerProps {
 }
 
 export function ToastBanner({ toast, onDismiss }: ToastBannerProps) {
+  const { isDark } = useTheme();
   const translateY = useRef(new Animated.Value(-120)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -27,7 +29,7 @@ export function ToastBanner({ toast, onDismiss }: ToastBannerProps) {
       Animated.spring(translateY, {
         toValue: 0,
         useNativeDriver: true,
-        damping: 15,
+        damping: 16,
         stiffness: 140,
       }),
       Animated.timing(opacity, {
@@ -62,18 +64,34 @@ export function ToastBanner({ toast, onDismiss }: ToastBannerProps) {
   const isSuccess = toast.type === 'success';
 
   const containerStyle = isError
-    ? 'border-red-500/50 bg-red-950/95'
+    ? 'border-rose-200 bg-white dark:border-rose-900/60 dark:bg-[#251518]'
     : isWarning
-      ? 'border-amber-500/50 bg-amber-950/95'
+      ? 'border-amber-200 bg-white dark:border-amber-900/60 dark:bg-[#2b1f14]'
       : isSuccess
-        ? 'border-emerald-500/50 bg-emerald-950/95'
-        : 'border-slate-700 bg-slate-900/95';
+        ? 'border-emerald-200 bg-white dark:border-emerald-800/60 dark:bg-[#16271e]'
+        : 'border-stone-200 bg-white dark:border-stone-700/60 dark:bg-[#1e2325]';
+
+  const titleColor = isError
+    ? 'text-rose-900 dark:text-rose-200'
+    : isWarning
+      ? 'text-amber-900 dark:text-amber-200'
+      : isSuccess
+        ? 'text-emerald-950 dark:text-emerald-200'
+        : 'text-stone-900 dark:text-stone-100';
+
+  const descColor = isError
+    ? 'text-rose-700 dark:text-rose-300'
+    : isWarning
+      ? 'text-amber-700 dark:text-amber-300'
+      : isSuccess
+        ? 'text-emerald-800 dark:text-emerald-300'
+        : 'text-stone-500 dark:text-stone-400';
 
   const renderIcon = () => {
-    if (isError) return <WifiOff size={20} color="#f87171" />;
-    if (isWarning) return <AlertTriangle size={20} color="#fbbf24" />;
-    if (isSuccess) return <CheckCircle2 size={20} color="#34d399" />;
-    return <Info size={20} color="#60a5fa" />;
+    if (isError) return <WifiOff size={18} color={isDark ? '#fb7185' : '#e11d48'} />;
+    if (isWarning) return <AlertTriangle size={18} color={isDark ? '#fbbf24' : '#d97706'} />;
+    if (isSuccess) return <CheckCircle2 size={18} color={isDark ? '#52b788' : '#2d6a4f'} />;
+    return <Info size={18} color={isDark ? '#60a5fa' : '#2563eb'} />;
   };
 
   return (
@@ -82,20 +100,20 @@ export function ToastBanner({ toast, onDismiss }: ToastBannerProps) {
       className="absolute left-4 right-4 top-14 z-50"
     >
       <View
-        className={`flex-row items-start rounded-2xl border p-4 shadow-2xl ${containerStyle}`}
+        className={`flex-row items-start rounded-2xl border p-3.5 shadow-lg ${containerStyle}`}
       >
         <View className="mt-0.5">{renderIcon()}</View>
         <View className="ml-3 flex-1 pr-2">
-          <Text className="text-sm font-bold text-white">{toast.title}</Text>
-          <Text className="mt-0.5 text-xs leading-4 text-slate-200">
+          <Text className={`text-xs font-bold ${titleColor}`}>{toast.title}</Text>
+          <Text className={`mt-0.5 text-[11px] leading-4 ${descColor}`}>
             {toast.message}
           </Text>
         </View>
         <Pressable
           onPress={onDismiss}
-          className="h-7 w-7 items-center justify-center rounded-full bg-white/10 active:opacity-70"
+          className="h-6 w-6 items-center justify-center rounded-full bg-stone-100 active:opacity-70 dark:bg-white/10"
         >
-          <X size={14} color="#f8fafc" />
+          <X size={13} color={isDark ? '#edf2ee' : '#64748b'} />
         </Pressable>
       </View>
     </Animated.View>

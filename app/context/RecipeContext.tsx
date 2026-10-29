@@ -5,6 +5,7 @@ import { RecipeItem, ScanSession } from '@/types/recipe';
 import { useToast } from '@/context/ToastContext';
 import { useLibrary } from '@/context/LibraryContext';
 import { generateId } from '@/utils/recipe';
+import { useI18n } from '@/i18n';
 
 interface RecipeContextValue {
   recipes: RecipeItem[];
@@ -32,6 +33,7 @@ export function RecipeProvider({ children }: { children: React.ReactNode }) {
   const abortRef = useRef<AbortController | null>(null);
   const { showToast } = useToast();
   const { preferences, addHistorySession } = useLibrary();
+  const { t } = useI18n();
 
   const clearError = useCallback(() => setError(null), []);
 
@@ -88,36 +90,36 @@ export function RecipeProvider({ children }: { children: React.ReactNode }) {
         addHistorySession(session);
 
         showToast(
-          'Recipes Ready!',
-          `Generated ${response.recipes.length} recipes from your ingredients.`,
+          t('toasts.recipesReadyTitle'),
+          t('toasts.recipesReadyDesc', { count: response.recipes.length }),
           'success'
         );
         return true;
       } catch (err) {
         if (err instanceof ApiClientError && err.errorCode === 'CANCELLED') {
           console.log('[RecipeContext] Analysis cancelled by user.');
-          showToast('Cancelled', 'Ingredient analysis was cancelled.', 'info');
+          showToast(t('toasts.cancelledTitle'), t('toasts.cancelledDesc'), 'info');
           return false;
         }
         console.error('[RecipeContext] Error in analyzeIngredientPhoto:', err);
         if (err instanceof ApiClientError) {
           setError(err.message);
           if (err.errorCode === 'NETWORK_ERROR') {
-            showToast('Connection Failed', err.message, 'error');
+            showToast(t('toasts.connectionFailedTitle'), err.message, 'error');
           } else if (err.errorCode === 'NO_INGREDIENTS_FOUND') {
-            showToast('No Ingredients Found', err.message, 'warning');
+            showToast(t('toasts.noIngredientsTitle'), err.message, 'warning');
           } else if (err.errorCode === 'IMAGE_TOO_LARGE') {
-            showToast('Image Too Large', err.message, 'warning');
+            showToast(t('toasts.imageTooLargeTitle'), err.message, 'warning');
           } else {
-            showToast('AI Generation Error', err.message, 'error');
+            showToast(t('toasts.aiErrorTitle'), err.message, 'error');
           }
         } else {
           const message =
             err instanceof Error
               ? err.message
-              : 'An unexpected error occurred while analyzing ingredients.';
+              : t('toasts.unexpectedErrorDesc');
           setError(message);
-          showToast('Unexpected Error', message, 'error');
+          showToast(t('toasts.unexpectedErrorTitle'), message, 'error');
         }
         return false;
       } finally {
@@ -127,7 +129,7 @@ export function RecipeProvider({ children }: { children: React.ReactNode }) {
         }
       }
     },
-    [showToast, preferences, openSession, addHistorySession]
+    [showToast, preferences, openSession, addHistorySession, t]
   );
 
   return (

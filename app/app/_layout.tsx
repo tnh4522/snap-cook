@@ -8,54 +8,67 @@ import { AlertOctagon, RotateCcw } from 'lucide-react-native';
 import { ToastProvider } from '@/context/ToastContext';
 import { RecipeProvider } from '@/context/RecipeContext';
 import { LibraryProvider } from '@/context/LibraryContext';
+import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
 
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   return (
-    <SafeAreaView className="flex-1 items-center justify-center bg-slate-950 px-6">
-      <View className="w-full max-w-sm items-center rounded-3xl border border-red-500/30 bg-slate-900 p-6">
-        <View className="mb-4 h-16 w-16 items-center justify-center rounded-2xl bg-red-500/15">
-          <AlertOctagon size={32} color="#f87171" />
+    <SafeAreaView className="flex-1 items-center justify-center bg-stone-50 px-6 dark:bg-[#121415]">
+      <View className="w-full max-w-sm items-center rounded-3xl border border-rose-200 bg-white p-6 shadow-sm dark:border-rose-900/40 dark:bg-[#1a1d1f]">
+        <View className="mb-4 h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-950/40">
+          <AlertOctagon size={30} color="#e11d48" />
         </View>
-        <Text className="text-center text-xl font-extrabold text-white">
+        <Text className="text-center text-xl font-bold text-stone-800 dark:text-stone-100">
           Navigation Error
         </Text>
-        <Text className="mt-2 text-center text-sm leading-5 text-slate-400">
+        <Text className="mt-2 text-center text-sm leading-5 text-stone-500 dark:text-stone-400">
           {error.message || 'An unexpected error occurred in this screen.'}
         </Text>
         <Pressable
           onPress={retry}
-          className="mt-6 flex-row items-center rounded-2xl bg-emerald-500 px-6 py-3 active:opacity-85"
+          className="mt-6 flex-row items-center rounded-2xl bg-emerald-700 px-6 py-3 active:opacity-85 dark:bg-emerald-600"
         >
-          <RotateCcw size={16} color="#022c22" />
-          <Text className="ml-2 text-sm font-bold text-slate-950">Retry Screen</Text>
+          <RotateCcw size={16} color="#ffffff" />
+          <Text className="ml-2 text-sm font-bold text-white">Retry Screen</Text>
         </Pressable>
       </View>
     </SafeAreaView>
   );
 }
 
+function NavigationRoot() {
+  const { isDark, colors } = useTheme();
+
+  return (
+    <>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.bg },
+          animation: 'slide_from_right',
+        }}
+      >
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="recipes" options={{ headerShown: false }} />
+        <Stack.Screen name="recipe/[id]" options={{ headerShown: false }} />
+      </Stack>
+    </>
+  );
+}
+
 export default function RootLayout() {
   return (
     <GlobalErrorBoundary>
-      <ToastProvider>
-        <LibraryProvider>
-          <RecipeProvider>
-            <StatusBar style="light" />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: '#020617' },
-                animation: 'slide_from_right',
-              }}
-            >
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="recipes" options={{ headerShown: false }} />
-              <Stack.Screen name="recipe/[id]" options={{ headerShown: false }} />
-            </Stack>
-          </RecipeProvider>
-        </LibraryProvider>
-      </ToastProvider>
+      <ThemeProvider>
+        <ToastProvider>
+          <LibraryProvider>
+            <RecipeProvider>
+              <NavigationRoot />
+            </RecipeProvider>
+          </LibraryProvider>
+        </ToastProvider>
+      </ThemeProvider>
     </GlobalErrorBoundary>
   );
 }

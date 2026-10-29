@@ -14,10 +14,12 @@ import {
 import { useRecipes } from '@/context/RecipeContext';
 import { useLibrary } from '@/context/LibraryContext';
 import { useToast } from '@/context/ToastContext';
+import { useTheme } from '@/context/ThemeContext';
 import { InstructionList } from '@/components/InstructionList';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { RecipeMetaChips } from '@/components/RecipeMetaChips';
 import { formatRecipeForShare } from '@/utils/recipe';
+import { useI18n } from '@/i18n';
 
 function toggleInSet(set: Set<number>, value: number): Set<number> {
   const next = new Set(set);
@@ -32,6 +34,8 @@ export default function RecipeDetailScreen() {
   const { recipes, capturedImageUri } = useRecipes();
   const { favorites } = useLibrary();
   const { showToast } = useToast();
+  const { isDark } = useTheme();
+  const { t, language } = useI18n();
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
@@ -52,13 +56,18 @@ export default function RecipeDetailScreen() {
 
   if (!recipe) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-slate-950 px-6">
-        <Text className="text-lg font-bold text-white">Recipe not found</Text>
-        <Text className="mt-2 text-center text-sm text-slate-400">
-          It may have been removed from your favorites or the session was reset.
+      <SafeAreaView className="flex-1 items-center justify-center bg-[#f8f9fa] px-6 dark:bg-[#121415]">
+        <Text className="text-base font-bold text-stone-800 dark:text-stone-100">
+          {t('recipeDetail.notFoundTitle')}
         </Text>
-        <Pressable onPress={handleBack} className="mt-4 rounded-2xl bg-emerald-500 px-5 py-2.5">
-          <Text className="font-bold text-slate-950">Go Back</Text>
+        <Text className="mt-2 text-center text-xs leading-5 text-stone-500 dark:text-stone-400">
+          {t('recipeDetail.notFoundDesc')}
+        </Text>
+        <Pressable
+          onPress={handleBack}
+          className="mt-5 rounded-2xl bg-emerald-700 px-5 py-2.5 shadow-sm active:opacity-85 dark:bg-emerald-600"
+        >
+          <Text className="text-xs font-bold text-white">{t('common.goBack')}</Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -71,10 +80,10 @@ export default function RecipeDetailScreen() {
 
   const handleShare = async () => {
     try {
-      await Share.share({ title: recipe.name, message: formatRecipeForShare(recipe) });
+      await Share.share({ title: recipe.name, message: formatRecipeForShare(recipe, language) });
     } catch (err) {
       console.error('[RecipeDetail] Share failed:', err);
-      showToast('Share Failed', 'Unable to open the share sheet.', 'error');
+      showToast(t('recipeDetail.shareFailedTitle'), t('recipeDetail.shareFailedDesc'), 'error');
     }
   };
 
@@ -84,25 +93,28 @@ export default function RecipeDetailScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-950">
+    <SafeAreaView className="flex-1 bg-[#f8f9fa] dark:bg-[#121415]">
+      {/* Top action bar */}
       <View className="flex-row items-center justify-between px-6 py-4">
         <Pressable
           onPress={handleBack}
-          accessibilityLabel="Go back"
-          className="h-10 w-10 items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 active:opacity-75"
+          accessibilityLabel={t('recipeDetail.goBackA11y')}
+          className="h-10 w-10 items-center justify-center rounded-2xl border border-stone-200/90 bg-white shadow-sm active:opacity-75 dark:border-stone-800 dark:bg-[#1a1d1f]"
         >
-          <ArrowLeft size={20} color="#f8fafc" />
+          <ArrowLeft size={18} color={isDark ? '#edf2ee' : '#1c2420'} />
         </Pressable>
-        <Text className="text-sm font-semibold uppercase tracking-wider text-emerald-400">
-          {isFavoriteSource ? 'Favorite Recipe' : `Recipe #${recipeIndex + 1}`}
+        <Text className="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+          {isFavoriteSource
+            ? t('recipeDetail.favoriteBadge')
+            : t('recipeDetail.recipeBadge', { num: recipeIndex + 1 })}
         </Text>
         <View className="flex-row">
           <Pressable
             onPress={handleShare}
-            accessibilityLabel="Share recipe"
-            className="mr-2 h-10 w-10 items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 active:opacity-75"
+            accessibilityLabel={t('recipeDetail.shareRecipeA11y')}
+            className="mr-2 h-10 w-10 items-center justify-center rounded-2xl border border-stone-200/90 bg-white shadow-sm active:opacity-75 dark:border-stone-800 dark:bg-[#1a1d1f]"
           >
-            <Share2 size={18} color="#e2e8f0" />
+            <Share2 size={16} color={isDark ? '#edf2ee' : '#475569'} />
           </Pressable>
           <FavoriteButton recipe={recipe} imageUri={imageUri} />
         </View>
@@ -113,40 +125,52 @@ export default function RecipeDetailScreen() {
         contentContainerStyle={{ paddingBottom: 48 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="mb-6 rounded-3xl border border-slate-800 bg-slate-900 p-6">
-          <Text className="text-2xl font-extrabold leading-8 text-white">{recipe.name}</Text>
-          <View className="mt-4">
+        {/* Recipe Title & Meta Header */}
+        <View className="mb-5 rounded-3xl border border-stone-200/90 bg-white p-6 shadow-sm dark:border-stone-800/80 dark:bg-[#1a1d1f]">
+          <Text className="text-xl font-bold leading-7 text-stone-900 dark:text-stone-100">
+            {recipe.name}
+          </Text>
+          <View className="mt-3.5">
             <RecipeMetaChips recipe={recipe} size="md" />
           </View>
 
+          {/* Progress bar */}
           <View className="mt-5">
             <View className="mb-1.5 flex-row justify-between">
-              <Text className="text-xs font-semibold text-slate-400">Cooking progress</Text>
-              <Text className="text-xs font-bold text-emerald-400">
-                {doneSteps}/{totalSteps} steps
+              <Text className="text-xs font-medium text-stone-500 dark:text-stone-400">
+                {t('recipeDetail.cookingProgress')}
+              </Text>
+              <Text className="text-xs font-bold text-emerald-800 dark:text-emerald-400">
+                {t('recipeDetail.stepsProgress', { done: doneSteps, total: totalSteps })}
               </Text>
             </View>
-            <View className="h-2 overflow-hidden rounded-full bg-slate-800">
+            <View className="h-2 overflow-hidden rounded-full bg-stone-100 dark:bg-stone-800">
               <View
-                className="h-full rounded-full bg-emerald-500"
+                className="h-full rounded-full bg-emerald-700 dark:bg-emerald-500"
                 style={{ width: `${Math.round(progress * 100)}%` }}
               />
             </View>
           </View>
         </View>
 
-        <View className="mb-6">
+        {/* Ingredients section */}
+        <View className="mb-5">
           <View className="mb-3 flex-row items-center justify-between">
             <View className="flex-row items-center">
-              <ShoppingBasket size={18} color="#34d399" />
-              <Text className="ml-2 text-lg font-bold text-white">Ingredients</Text>
+              <ShoppingBasket size={17} color={isDark ? '#52b788' : '#2d6a4f'} />
+              <Text className="ml-2 text-base font-bold text-stone-900 dark:text-stone-100">
+                {t('recipeDetail.ingredients')}
+              </Text>
             </View>
-            <Text className="text-xs text-slate-400">
-              {checkedIngredients.size}/{recipe.ingredients.length} ready
+            <Text className="text-xs text-stone-500 dark:text-stone-400">
+              {t('recipeDetail.ingredientsReady', {
+                ready: checkedIngredients.size,
+                total: recipe.ingredients.length,
+              })}
             </Text>
           </View>
 
-          <View className="rounded-3xl border border-slate-800 bg-slate-900/80 p-4">
+          <View className="rounded-3xl border border-stone-200/90 bg-white p-4 shadow-sm dark:border-stone-800/80 dark:bg-[#1a1d1f]">
             {recipe.ingredients.map((ingredient, idx) => {
               const checked = checkedIngredients.has(idx);
               return (
@@ -156,19 +180,25 @@ export default function RecipeDetailScreen() {
                   accessibilityRole="checkbox"
                   accessibilityState={{ checked }}
                   className={`flex-row items-center py-2.5 active:opacity-70 ${
-                    idx < recipe.ingredients.length - 1 ? 'border-b border-slate-800/80' : ''
+                    idx < recipe.ingredients.length - 1
+                      ? 'border-b border-stone-100 dark:border-stone-800/70'
+                      : ''
                   }`}
                 >
                   <View
                     className={`h-5 w-5 items-center justify-center rounded-md border ${
-                      checked ? 'border-emerald-500 bg-emerald-500' : 'border-slate-600'
+                      checked
+                        ? 'border-emerald-700 bg-emerald-700 dark:border-emerald-500 dark:bg-emerald-500'
+                        : 'border-stone-300 dark:border-stone-600'
                     }`}
                   >
-                    {checked && <Check size={12} color="#022c22" />}
+                    {checked && <Check size={12} color="#ffffff" strokeWidth={2.5} />}
                   </View>
                   <Text
-                    className={`ml-3 flex-1 text-sm font-medium ${
-                      checked ? 'text-slate-500 line-through' : 'text-slate-200'
+                    className={`ml-3 flex-1 text-xs font-medium leading-5 ${
+                      checked
+                        ? 'text-stone-400 line-through dark:text-stone-500'
+                        : 'text-stone-700 dark:text-stone-200'
                     }`}
                   >
                     {ingredient}
@@ -179,14 +209,19 @@ export default function RecipeDetailScreen() {
           </View>
         </View>
 
+        {/* Steps section */}
         <View>
-          <View className="mb-3 flex-row items-center justify-between">
+          <View className="mb-2.5 flex-row items-center justify-between">
             <View className="flex-row items-center">
-              <ListOrdered size={18} color="#34d399" />
-              <Text className="ml-2 text-lg font-bold text-white">Step-by-Step Instructions</Text>
+              <ListOrdered size={17} color={isDark ? '#52b788' : '#2d6a4f'} />
+              <Text className="ml-2 text-base font-bold text-stone-900 dark:text-stone-100">
+                {t('recipeDetail.instructions')}
+              </Text>
             </View>
           </View>
-          <Text className="mb-3 text-xs text-slate-500">Tap a step to mark it as done.</Text>
+          <Text className="mb-3 text-xs text-stone-400 dark:text-stone-500">
+            {t('recipeDetail.tapStepHint')}
+          </Text>
           <InstructionList
             instructions={recipe.instructions}
             completedSteps={completedSteps}
@@ -194,28 +229,34 @@ export default function RecipeDetailScreen() {
           />
         </View>
 
+        {/* Completion banner */}
         {allDone && (
-          <View className="mt-2 items-center rounded-3xl border border-emerald-500/40 bg-emerald-950/40 p-5">
-            <PartyPopper size={28} color="#34d399" />
-            <Text className="mt-2 text-base font-bold text-white">Bon appétit!</Text>
-            <Text className="mt-1 text-center text-xs text-slate-300">
-              You finished every step. Enjoy your meal!
+          <View className="mt-2 items-center rounded-3xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm dark:border-emerald-800/40 dark:bg-emerald-950/30">
+            <PartyPopper size={26} color={isDark ? '#52b788' : '#2d6a4f'} />
+            <Text className="mt-2 text-sm font-bold text-emerald-900 dark:text-emerald-200">
+              {t('recipeDetail.bonAppetit')}
+            </Text>
+            <Text className="mt-1 text-center text-xs text-emerald-700 dark:text-emerald-300">
+              {t('recipeDetail.enjoyMeal')}
             </Text>
           </View>
         )}
 
+        {/* Reset progress */}
         {(doneSteps > 0 || checkedIngredients.size > 0) && (
           <Pressable
             onPress={resetProgress}
-            className="mt-4 flex-row items-center justify-center self-center rounded-2xl border border-slate-800 bg-slate-900 px-4 py-2.5 active:opacity-75"
+            className="mt-4 flex-row items-center justify-center self-center rounded-2xl border border-stone-200/90 bg-white px-4 py-2.5 shadow-sm active:opacity-75 dark:border-stone-800 dark:bg-[#1a1d1f]"
           >
-            <RotateCcw size={14} color="#94a3b8" />
-            <Text className="ml-2 text-xs font-semibold text-slate-300">Reset progress</Text>
+            <RotateCcw size={14} color={isDark ? '#9ca9a1' : '#64748b'} />
+            <Text className="ml-2 text-xs font-semibold text-stone-600 dark:text-stone-300">
+              {t('recipeDetail.resetProgress')}
+            </Text>
           </Pressable>
         )}
 
-        <Text className="mt-6 text-center text-[11px] text-slate-600">
-          Nutrition values are AI estimates. Check for allergens before cooking.
+        <Text className="mt-6 text-center text-[11px] text-stone-400 dark:text-stone-500">
+          {t('recipeDetail.nutritionNotice')}
         </Text>
       </ScrollView>
     </SafeAreaView>

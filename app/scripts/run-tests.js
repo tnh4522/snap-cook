@@ -1,10 +1,74 @@
 /**
- * Simple test suite for frontend utility functions.
+ * Test suite for frontend utility functions and i18n localization.
  * Run with: node scripts/run-tests.js
  */
 const assert = require('assert');
 
-// Port of recipe utility functions for verification
+// Port of recipe utility functions and translation logic for verification
+const translations = {
+  en: {
+    tabs: { snapAndCook: 'Snap & Cook', history: 'History', favorites: 'Favorites', settings: 'Settings' },
+    common: { cancel: 'Cancel', delete: 'Delete', clear: 'Clear', person: 'person', people: 'people', servings: 'servings' },
+    settings: {
+      appLanguageTitle: 'App language',
+      appLanguageSubtitle: 'Language used for the app interface and recipe generation.',
+      themeTitle: 'Theme',
+      themeLight: 'Light',
+      themeDark: 'Dark',
+      themeSystem: 'System',
+    },
+    time: {
+      justNow: 'Just now',
+      minAgo: '{count} min ago',
+      hoursAgo: '{count}h ago',
+      daysAgo: '{count}d ago',
+      minutesOnly: '{count} min',
+      hoursMinutes: '{hours}h {minutes}m',
+      hoursOnly: '{hours}h',
+    },
+  },
+  vi: {
+    tabs: { snapAndCook: 'Chụp & Nấu', history: 'Lịch sử', favorites: 'Yêu thích', settings: 'Cài đặt' },
+    common: { cancel: 'Hủy', delete: 'Xóa', clear: 'Xóa', person: 'người', people: 'người', servings: 'khẩu phần' },
+    settings: {
+      appLanguageTitle: 'Ngôn ngữ ứng dụng',
+      appLanguageSubtitle: 'Ngôn ngữ hiển thị cho giao diện ứng dụng và gợi ý công thức.',
+      themeTitle: 'Giao diện',
+      themeLight: 'Sáng',
+      themeDark: 'Tối',
+      themeSystem: 'Hệ thống',
+    },
+    time: {
+      justNow: 'Vừa xong',
+      minAgo: '{count} phút trước',
+      hoursAgo: '{count} giờ trước',
+      daysAgo: '{count} ngày trước',
+      minutesOnly: '{count} phút',
+      hoursMinutes: '{hours}h {minutes}p',
+      hoursOnly: '{hours}h',
+    },
+  },
+};
+
+function translate(lang, key, params) {
+  const langDict = translations[lang] || translations.en;
+  const parts = key.split('.');
+  let current = langDict;
+  for (const part of parts) {
+    if (current && typeof current === 'object' && part in current) {
+      current = current[part];
+    } else {
+      current = undefined;
+      break;
+    }
+  }
+  if (typeof current !== 'string') return key;
+  if (!params) return current;
+  return current.replace(/\{(\w+)\}/g, (_, placeholder) => {
+    return placeholder in params ? String(params[placeholder]) : `{${placeholder}}`;
+  });
+}
+
 function recipeKey(recipe) {
   const base = `${recipe.name.trim().toLowerCase()}|${recipe.ingredients
     .map((i) => i.trim().toLowerCase())
@@ -20,24 +84,26 @@ function stripLeadingStepNumber(step) {
   return step.replace(/^(?:step\s*\d+\s*[:.)\-]?\s*|\d+\s*[:.)\-]\s*|\d+\.\s*)/i, '').trim();
 }
 
-function formatCookingTime(minutes) {
+function formatCookingTime(minutes, lang = 'en') {
   if (minutes == null || minutes <= 0) return null;
-  if (minutes < 60) return `${minutes} min`;
+  if (minutes < 60) return translate(lang, 'time.minutesOnly', { count: minutes });
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  return m ? `${h}h ${m}m` : `${h}h`;
+  return m
+    ? translate(lang, 'time.hoursMinutes', { hours: h, minutes: m })
+    : translate(lang, 'time.hoursOnly', { hours: h });
 }
 
-function formatRelativeDate(timestamp, now = Date.now()) {
+function formatRelativeDate(timestamp, lang = 'en', now = Date.now()) {
   const diffMs = now - timestamp;
   const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return 'Just now';
-  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 1) return translate(lang, 'time.justNow');
+  if (minutes < 60) return translate(lang, 'time.minAgo', { count: minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return translate(lang, 'time.hoursAgo', { count: hours });
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(timestamp).toLocaleDateString();
+  if (days < 7) return translate(lang, 'time.daysAgo', { count: days });
+  return new Date(timestamp).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US');
 }
 
 // 1. stripLeadingStepNumber
@@ -47,13 +113,17 @@ assert.strictEqual(stripLeadingStepNumber('Step 3) Add chopped spinach'), 'Add c
 assert.strictEqual(stripLeadingStepNumber('4 - Stir gently'), 'Stir gently');
 assert.strictEqual(stripLeadingStepNumber('Serve hot and enjoy!'), 'Serve hot and enjoy!');
 
-// 2. formatCookingTime
+// 2. formatCookingTime (en and vi)
 assert.strictEqual(formatCookingTime(null), null);
 assert.strictEqual(formatCookingTime(0), null);
-assert.strictEqual(formatCookingTime(15), '15 min');
-assert.strictEqual(formatCookingTime(60), '60h'.startsWith('1h') ? '1h' : '1h');
-assert.strictEqual(formatCookingTime(75), '1h 15m');
-assert.strictEqual(formatCookingTime(120), '2h');
+assert.strictEqual(formatCookingTime(15, 'en'), '15 min');
+assert.strictEqual(formatCookingTime(15, 'vi'), '15 phút');
+assert.strictEqual(formatCookingTime(60, 'en'), '1h');
+assert.strictEqual(formatCookingTime(60, 'vi'), '1h');
+assert.strictEqual(formatCookingTime(75, 'en'), '1h 15m');
+assert.strictEqual(formatCookingTime(75, 'vi'), '1h 15p');
+assert.strictEqual(formatCookingTime(120, 'en'), '2h');
+assert.strictEqual(formatCookingTime(120, 'vi'), '2h');
 
 // 3. recipeKey deterministic hash
 const r1 = { name: 'Fried Rice', ingredients: ['Rice', 'Eggs', 'Soy sauce'] };
@@ -63,11 +133,24 @@ assert.strictEqual(recipeKey(r1), recipeKey(r2), 'Key should normalize casing an
 assert.notStrictEqual(recipeKey(r1), recipeKey(r3), 'Different ingredients produce different keys');
 assert(recipeKey(r1).startsWith('r'), 'Key should start with r');
 
-// 4. formatRelativeDate
+// 4. formatRelativeDate (en and vi)
 const now = 1700000000000;
-assert.strictEqual(formatRelativeDate(now - 10000, now), 'Just now');
-assert.strictEqual(formatRelativeDate(now - 120000, now), '2 min ago');
-assert.strictEqual(formatRelativeDate(now - 7200000, now), '2h ago');
-assert.strictEqual(formatRelativeDate(now - 86400000 * 3, now), '3d ago');
+assert.strictEqual(formatRelativeDate(now - 10000, 'en', now), 'Just now');
+assert.strictEqual(formatRelativeDate(now - 10000, 'vi', now), 'Vừa xong');
+assert.strictEqual(formatRelativeDate(now - 120000, 'en', now), '2 min ago');
+assert.strictEqual(formatRelativeDate(now - 120000, 'vi', now), '2 phút trước');
+assert.strictEqual(formatRelativeDate(now - 7200000, 'en', now), '2h ago');
+assert.strictEqual(formatRelativeDate(now - 7200000, 'vi', now), '2 giờ trước');
+assert.strictEqual(formatRelativeDate(now - 86400000 * 3, 'en', now), '3d ago');
+assert.strictEqual(formatRelativeDate(now - 86400000 * 3, 'vi', now), '3 ngày trước');
 
-console.log('✓ All frontend utility unit tests passed!');
+// 5. App language / translations
+assert.strictEqual(translate('en', 'tabs.snapAndCook'), 'Snap & Cook');
+assert.strictEqual(translate('vi', 'tabs.snapAndCook'), 'Chụp & Nấu');
+assert.strictEqual(translate('vi', 'settings.appLanguageTitle'), 'Ngôn ngữ ứng dụng');
+assert.strictEqual(translate('en', 'settings.appLanguageTitle'), 'App language');
+assert.strictEqual(translate('vi', 'settings.themeTitle'), 'Giao diện');
+assert.strictEqual(translate('en', 'settings.themeLight'), 'Light');
+assert.strictEqual(translate('vi', 'settings.themeLight'), 'Sáng');
+
+console.log('✓ All frontend utility and localization unit tests passed!');
