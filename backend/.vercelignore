@@ -5,4 +5,9 @@ __pycache__/
 .env
 .env.local
 schema.sql
+supabase_schema.sql
+tests/
+.agents/
+.claude/
+skills-lock.json
 .git/
